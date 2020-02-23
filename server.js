@@ -9,75 +9,68 @@ var cheerio = require("cheerio");
 var app = express();
 
 // Database configuration
-var databaseUrl = "scraper";
-var collections = ["scrapedData"];
+var databaseUrl = "healthdb";
+var collections = ["medicine"];
 
 // Hook mongojs configuration to the db variable
 var db = mongojs(databaseUrl, collections);
-db.on("error", function(error) {
-  console.log("Database Error:", error);
-});
 
-// Main route (simple Hello World Message)
-app.get("/", function(req, res) {
-  res.send("Hello world");
-});
-
-// Retrieve data from the db
-app.get("/all", function(req, res) {
-  // Find all results from the scrapedData collection in the db
-  db.scrapedData.find({}, function(error, found) {
-    // Throw any errors to the console
-    if (error) {
-      console.log(error);
-    }
-    // If there are no errors, send the data to the browser as json
-    else {
-      res.json(found);
-    }
-  });
-});
-
-// Scrape data from one site and place it into the mongodb db
-app.get("/scrape", function(req, res) {
-  // Make a request via axios for the news section of `ycombinator`
-  axios.get("https://news.ycombinator.com/").then(function(response) {
-    // Load the html body from axios into cheerio
-    var $ = cheerio.load(response.data);
-    // For each element with a "title" class
-    $(".title").each(function(i, element) {
-      // Save the text and href of each link enclosed in the current element
-      var title = $(element).children("a").text();
-      var link = $(element).children("a").attr("href");
-
-      // If this found element had both a title and a link
-      if (title && link) {
-        // Insert the data in the scrapedData db
-        db.scrapedData.insert({
-          title: title,
-          link: link
-        },
-        function(err, inserted) {
-          if (err) {
-            // Log the error if one is encountered during the query
-            console.log(err);
-          }
-          else {
-            // Otherwise, log the inserted data
-            console.log(inserted);
-          }
+var scrape = page => {
+    let url = "http://libproject.hkbu.edu.hk/was40/outline?lang=cht&page="+page+"&channelid=47953&ispage=yes&trslc=50332197.1582495404.1";
+    axios.get(url).then(response => {
+        let $ = cheerio.load(response.data);
+        let medicine = {};
+        $("table table table td").each((i, element) => {
+            
+            if ((i - 4) % 13 === 0 && i > 16){
+                medicine.name = element.children[0].data;
+            }
+            if ((i - 8) % 13 === 0 && i > 16){
+                medicine.english = element.children[0].data;
+            }
+            if ((i - 10) % 13 === 0 && i > 16){
+                medicine.type = element.children[0].data;
+            }
+            if ((i - 12) % 13 === 0 && i > 16){
+                medicine.img = $(element).children('img').attr("src").split("/").pop();
+            }
+            if (medicine.name && medicine.english && medicine.type && medicine.img) {
+                db.medicine.insert(
+                    medicine,
+                    (err, inserted) => console.log(err || inserted)
+                );
+                medicine = {};
+            }
+            
         });
-      }
-    });
-  });
 
-  // Send a "Scrape Complete" message to the browser
-  res.send("Scrape Complete");
+        if (page <= 105) {
+            scrape(++page);
+        }
+    });
+}
+
+db.on("error", function(error) {
+    console.log("Database Error:", error);
 });
 
+app.get("/", function(req, res) {
+    res.send("Hello world");
+});
 
-// Listen on port 3000
+app.get("/all", function(req, res) {
+    db.medicine.find(
+        {}, 
+        (err, found) => err ? console.log(err):res.json(found)
+    );
+});
+
+app.get("/scrape", function(req, res) {
+    scrape(1);
+    res.send("Scrape Complete");
+});
+
 app.listen(3000, function() {
-  console.log("App running on port 3000!");
+    console.log("App running on port 3000!");
 });
 
