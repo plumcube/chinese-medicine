@@ -8,6 +8,12 @@ var cheerio = require("cheerio");
 // Initialize Express
 var app = express();
 
+// Parse request body as JSON
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+// Make public a static folder
+app.use(express.static("public"));
+
 // Database configuration
 var databaseUrl = "healthdb";
 var collections = ["medicine"];
@@ -61,6 +67,13 @@ app.get("/", function(req, res) {
 app.get("/all", function(req, res) {
     db.medicine.find(
         {}, 
+        (err, found) => err ? console.log(err):res.json(found)
+    );
+});
+
+app.get("/all/:search", function(req, res) {
+    db.medicine.find(
+        {name: req.params.search}, 
         (err, found) => err ? console.log(err):res.json(found)
     );
 });

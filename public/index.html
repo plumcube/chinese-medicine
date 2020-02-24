@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+    <style>
+    p {
+      width: 80%;
+      height: 80%;
+      margin: auto;
+      padding: 10px;
+    }
+    h1, #results {
+      width: 80%;
+      height: 80%;
+      margin: auto;
+      overflow: auto;
+    }
+
+    </style>
+  </head>
+  <body>
+    <div class="jumbotron text-center">
+      <h1>中藥列表</h1>
+    </div>
+    <p>
+      <input type="text" value="" style="width: 300px;" /> 
+      <button class="btn-primary" style="width: 150px;">搜尋</button>
+    </p>
+    <div id="results"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
